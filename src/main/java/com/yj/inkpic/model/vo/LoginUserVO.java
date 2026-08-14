@@ -43,6 +43,9 @@ public class LoginUserVO implements Serializable {
     @ApiModelProperty("更新时间")
     private LocalDateTime updateTime;
 
+    @ApiModelProperty("jwt令牌")
+    private String token;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

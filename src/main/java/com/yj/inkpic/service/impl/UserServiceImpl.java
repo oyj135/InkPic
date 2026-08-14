@@ -4,20 +4,26 @@ import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
+import com.yj.inkpic.constant.JwtClaimsConstant;
 import com.yj.inkpic.constant.UserConstant;
 import com.yj.inkpic.excption.BusinessException;
 import com.yj.inkpic.model.dto.UserRegisterRequest;
 import com.yj.inkpic.model.entity.User;
 import com.yj.inkpic.model.enums.UserRoleEnum;
 import com.yj.inkpic.model.vo.LoginUserVO;
+import com.yj.inkpic.properties.JwtProperties;
 import com.yj.inkpic.service.UserService;
 import com.yj.inkpic.mapper.UserMapper;
 import com.yj.inkpic.utils.EncryptPassword;
+import com.yj.inkpic.utils.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
 * @author OuYJ
@@ -28,6 +34,10 @@ import javax.servlet.http.HttpServletRequest;
 @Slf4j
 public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     implements UserService{
+
+    @Resource
+    private JwtProperties jwtProperties;
+
     /**
      * 用户注册
      * @param userAccount 用户账号
@@ -98,11 +108,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
-        // 3. 返回脱敏信息
+        // 3. 生成 jwt 令牌
+        Map<String, Object> claims = new HashMap<>();
+        claims.put(JwtClaimsConstant.USER_ID, user.getId());
+        claims.put(JwtClaimsConstant.USER_ACCOUNT, user.getUserAccount());
+
+        // 令牌生成
+        String token = JwtUtil.createJWT(
+                jwtProperties.getUserSecretKey(), // 设置jwt签名加密时使用的秘钥
+                jwtProperties.getUserTtl(), // 设置jwt过期时间
+                claims // 设置jwt中保存的用户信息
+        );
+        // 4. 返回脱敏信息
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
-        // 4. 保存用户登录态
-        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUserVO);
+        // 设置 token
+        loginUserVO.setToken(token);
         return loginUserVO;
     }
 }

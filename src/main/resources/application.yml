@@ -48,13 +48,13 @@ knife4j:
         api-rule-resources:
           - com.yj.inkpic.controller
 # jwt令牌认证
-#inkPic:
-#  jwt:
-#    # 设置jwt签名加密时使用的秘钥
-#    admin-secret-key: inkPicAdmin
-#    # 设置jwt过期时间
-#    admin-ttl: 7200000
-#    # 设置前端传递过来的令牌名称
-#    admin-token-name: token
+ink-pic:
+  jwt:
+    # 设置jwt签名加密时使用的秘钥
+    user-secret-key: ${ink-pic.jwt.user-secret-key}
+    # 设置jwt过期时间
+    user-ttl: ${ink-pic.jwt.user-ttl}
+    # 设置前端传递过来的令牌名称
+    user-token-name: ${ink-pic.jwt.user-token-namenk}
 
 
