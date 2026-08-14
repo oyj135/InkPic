@@ -1,0 +1,112 @@
+package com.yj.inkpic.service.impl;
+
+import cn.hutool.core.util.StrUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import com.yj.inkpic.common.ErrorCode;
+import com.yj.inkpic.constant.UserConstant;
+import com.yj.inkpic.excption.BusinessException;
+import com.yj.inkpic.model.dto.UserRegisterRequest;
+import com.yj.inkpic.model.entity.User;
+import com.yj.inkpic.model.enums.UserRoleEnum;
+import com.yj.inkpic.model.vo.LoginUserVO;
+import com.yj.inkpic.service.UserService;
+import com.yj.inkpic.mapper.UserMapper;
+import com.yj.inkpic.utils.EncryptPassword;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
+import org.springframework.stereotype.Service;
+
+import javax.servlet.http.HttpServletRequest;
+
+/**
+* @author OuYJ
+* @description 针对表【user(用户)】的数据库操作Service实现
+* @createDate 2026-08-14 17:14:53
+*/
+@Service
+@Slf4j
+public class UserServiceImpl extends ServiceImpl<UserMapper, User>
+    implements UserService{
+    /**
+     * 用户注册
+     * @param userAccount 用户账号
+     * @param userPassword 用户密码
+     * @param checkPassword 确认密码
+     * @return 新用户id
+     */
+    @Override
+    public Long userRegister(String userAccount, String userPassword, String checkPassword) {
+        // 1. 效验参数
+        if (StrUtil.hasBlank(userAccount, userPassword, checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+        }
+        if (userAccount.length() < 4) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号过短");
+        }
+        if (userPassword.length() < 8 || checkPassword.length() < 8) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户密码过短");
+        }
+        if (!userPassword.equals(checkPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "两次密码不一致");
+        }
+        // 2. 检查账号是否重复
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.eq("userAccount", userAccount);
+        long count = this.baseMapper.selectCount(qw);
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户账号已存在");
+        }
+        // 3. 加密密码
+        String encryptPassword = EncryptPassword.getEncryptPassword(userPassword);
+        // 4. 插入数据
+        User user = new User();
+        user.setUserAccount(userAccount);
+        user.setUserPassword(encryptPassword);
+        user.setUserName("无名氏");
+        user.setUserRole(UserRoleEnum.USER.getValue());
+        boolean saveResult = this.save(user);
+        if (!saveResult) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "注册失败，数据库错误");
+        }
+        if (user.getId() == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户为空");
+        }
+        // 5. 返回结果
+        return user.getId();
+    }
+
+    /**
+     * 用户登录
+     * @param userAccount 用户账号
+     * @param userPassword 用户密码
+     * @return 登录用户信息（脱敏)
+     */
+    @Override
+    public LoginUserVO userLogin(String userAccount, String userPassword, HttpServletRequest request) {
+        // 1.效验参数
+        if (StrUtil.hasBlank(userAccount, userPassword)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
+        }
+        // 2.检查账号密码是否正确
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        // select * from user where userAccount = ? and userPassword = ?
+        qw.eq("userAccount", userAccount);
+        qw.eq("userPassword", EncryptPassword.getEncryptPassword(userPassword));
+        User user = this.baseMapper.selectOne(qw);
+        if (user == null) {
+            log.info("user login failed, userAccount cannot match userPassword");
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+        }
+        // 3. 返回脱敏信息
+        LoginUserVO loginUserVO = new LoginUserVO();
+        BeanUtils.copyProperties(user, loginUserVO);
+        // 4. 保存用户登录态
+        request.getSession().setAttribute(UserConstant.USER_LOGIN_STATE, loginUserVO);
+        return loginUserVO;
+    }
+}
+
+
+
+

@@ -5,7 +5,8 @@ import com.yj.inkpic.common.ErrorCode;
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>
  * @Date 2026/8/14
- * 简化异常类
+ *
+ * 异常处理工具类
  */
 public class ThrowUtils {
 
