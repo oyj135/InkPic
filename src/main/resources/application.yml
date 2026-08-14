@@ -1,0 +1,59 @@
+server:
+  port: 8123
+  servlet:
+    context-path: /api
+    # cookie 30 天过期
+    session:
+      cookie:
+        max-age: 2592000
+spring:
+  profiles:
+    active: dev
+  application:
+    name: InkPic
+    # 数据库配置
+  datasource:
+      driver-class-name: ${InkPic.datasource.driver-class-name}
+      url: jdbc:mysql://${InkPic.datasource.host}:${InkPic.datasource.port}/${InkPic.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${InkPic.datasource.username}
+      password: ${InkPic.datasource.password}
+  # 开放更大的文件上传体积
+  servlet:
+    multipart:
+      max-file-size: 10MB
+# mybatis-plus 配置
+mybatis-plus:
+  configuration:
+    # 仅在开发环境打印日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 关闭驼峰转下划线
+    map-underscore-to-camel-case: false
+  global-config:
+    db-config:
+      logic-delete-field: isDelete # 逻辑删除字段名
+      logic-delete-value: 1 # 逻辑已删除值 (默认为 1)
+      logic-not-delete-value: 0 # 逻辑未删除值 (默认为 0)
+    enable-sql-runner: true
+# 接口文档配置
+# 接口文档配置
+knife4j:
+  enable: true
+  openapi:
+    title: "接口文档"
+    version: 1.0
+    group:
+      default:
+        api-rule: package
+        api-rule-resources:
+          - com.yupi.inkPic.controller
+# jwt令牌认证
+#inkPic:
+#  jwt:
+#    # 设置jwt签名加密时使用的秘钥
+#    admin-secret-key: inkPicAdmin
+#    # 设置jwt过期时间
+#    admin-ttl: 7200000
+#    # 设置前端传递过来的令牌名称
+#    admin-token-name: token
+
+
