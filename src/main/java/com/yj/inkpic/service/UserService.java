@@ -1,10 +1,16 @@
 package com.yj.inkpic.service;
 
-import com.baomidou.mybatisplus.spring.service.IService;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
+import com.yj.inkpic.model.dto.UserAddRequest;
+import com.yj.inkpic.model.dto.UserQueryRequest;
+import com.yj.inkpic.model.dto.UserUpdateRequest;
 import com.yj.inkpic.model.entity.User;
 import com.yj.inkpic.model.vo.LoginUserVO;
+import com.yj.inkpic.model.vo.UserVO;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 /**
 * @author OuYJ
@@ -32,7 +38,7 @@ public interface UserService extends IService<User> {
 
 
     /**
-     * 获取当前登录用户
+     * 获取当前登录用户信息
      * @return
      */
     User getLoginUser();
@@ -43,4 +49,51 @@ public interface UserService extends IService<User> {
      * @return
      */
     LoginUserVO getLoginUserVO(User user);
+
+    /**
+     * 用户注销
+     *
+     * @return 注销是否成功
+     */
+    boolean userLogout();
+
+    /**
+     * 添加用户
+     *
+     * @param userAddRequest
+     * @return
+     */
+    Long addUser(UserAddRequest userAddRequest);
+
+    /**
+     * 更新用户信息
+     *
+     * @param userUpdateRequest
+     * @return
+     */
+    Boolean updateUser(UserUpdateRequest userUpdateRequest);
+
+    /**
+     * 获取用户VO信息
+     *
+     * @param user
+     * @return
+     */
+    UserVO getUserVO(User user);
+
+    /**
+     * 获取用户VO信息列表
+     *
+     * @param userList
+     * @return
+     */
+    List<UserVO> getUserVOList(List<User> userList);
+
+    /**
+     * 获取用户查询条件构造器
+     *
+     * @param userQueryRequest
+     * @return
+     */
+    Wrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest);
 }

@@ -25,6 +25,12 @@ public interface UserConstant {
      */
     String ADMIN_ROLE = "admin";
 
+    /**
+     * 默认密码
+     */
+    String DEFAULT_PASSWORD = "123456789";
+
+
     // endregion
 }
 

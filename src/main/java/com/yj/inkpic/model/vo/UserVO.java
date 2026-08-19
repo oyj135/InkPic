@@ -1,6 +1,6 @@
 package com.yj.inkpic.model.vo;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -9,12 +9,13 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 登录用户
+ * 用户
+ *
  * @TableName user
  */
-@ApiModel("已登录用户视图（脱敏）")
+@ApiModel("用户视图（脱敏）")
 @Data
-public class LoginUserVO implements Serializable {
+public class UserVO implements Serializable {
 
     @ApiModelProperty("用户ID")
     private Long id;
@@ -34,17 +35,8 @@ public class LoginUserVO implements Serializable {
     @ApiModelProperty("用户角色")
     private String userRole;
 
-    @ApiModelProperty("编辑时间")
-    private LocalDateTime editTime;
-
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
-
-    @ApiModelProperty("更新时间")
-    private LocalDateTime updateTime;
-
-    @ApiModelProperty("jwt令牌")
-    private String token;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

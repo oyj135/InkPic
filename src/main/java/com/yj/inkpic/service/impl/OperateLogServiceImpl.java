@@ -1,16 +1,13 @@
 package com.yj.inkpic.service.impl;
 
-import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.excption.BusinessException;
 import com.yj.inkpic.model.entity.OperateLog;
 import com.yj.inkpic.service.OperateLogService;
 import com.yj.inkpic.mapper.OperateLogMapper;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.util.concurrent.CompletableFuture;
 
 /**

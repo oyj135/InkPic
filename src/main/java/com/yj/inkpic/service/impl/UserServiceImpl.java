@@ -1,16 +1,21 @@
 package com.yj.inkpic.service.impl;
 
+import cn.hutool.core.collection.CollUtil;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.constant.JwtClaimsConstant;
 import com.yj.inkpic.excption.BusinessException;
+import com.yj.inkpic.model.dto.UserAddRequest;
 import com.yj.inkpic.model.dto.UserJwtDTO;
+import com.yj.inkpic.model.dto.UserQueryRequest;
+import com.yj.inkpic.model.dto.UserUpdateRequest;
 import com.yj.inkpic.model.entity.User;
 import com.yj.inkpic.model.enums.UserRoleEnum;
 import com.yj.inkpic.model.vo.LoginUserVO;
+import com.yj.inkpic.model.vo.UserVO;
 import com.yj.inkpic.properties.JwtProperties;
 import com.yj.inkpic.service.UserService;
 import com.yj.inkpic.mapper.UserMapper;
@@ -23,8 +28,13 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
+import static com.yj.inkpic.constant.UserConstant.DEFAULT_PASSWORD;
 
 /**
 * @author OuYJ
@@ -163,6 +173,141 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         BeanUtils.copyProperties(user, loginUserVO);
         return loginUserVO;
     }
+
+    /**
+     * 用户注销
+     *
+     * @return
+     */
+    @Override
+    public boolean userLogout() {
+        // 1.判断是否已经登录
+        UserJwtDTO currentUser = BaseContext.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
+        }
+        // 2.注销
+        BaseContext.removeCurrentUser();
+        return true;
+    }
+
+    /**
+     * 新增用户
+     *
+     * @param userAddRequest
+     * @return
+     */
+    @Override
+    public Long addUser(UserAddRequest userAddRequest) {
+        // 1. 判断参数是否为空
+        if (userAddRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        // 2. 判断账号是否重复
+        String userAccount = userAddRequest.getUserAccount();
+        if (StrUtil.hasBlank(userAccount)) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "账号不能为空");
+        }
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        qw.eq("userAccount", userAccount);
+        long count = this.baseMapper.selectCount(qw);
+        if (count > 0) {
+            throw new BusinessException(ErrorCode.DATA_ALREADY_EXIST, "用户账号已存在");
+        }
+        User user = new User();
+        BeanUtils.copyProperties(userAddRequest, user);
+        // 3. 填充密码
+        String encryptPassword = EncryptPassword.getEncryptPassword(DEFAULT_PASSWORD);
+        user.setUserPassword(encryptPassword);
+        // 4. 插入数据库
+        boolean save = this.save(user);
+        if (!save) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "新增用户失败");
+        }
+        return user.getId();
+    }
+
+    /**
+     * 更新用户信息
+     *
+     * @param userUpdateRequest
+     * @return
+     */
+    @Override
+    public Boolean updateUser(UserUpdateRequest userUpdateRequest) {
+        // 1. 判断参数是否为空
+        if (userUpdateRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        // 2. 更新数据库
+        User user = new User();
+        BeanUtils.copyProperties(userUpdateRequest, user);
+        boolean update = this.updateById(user);
+        if (!update) {
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新用户失败");
+        }
+        return true;
+    }
+
+    /**
+     * 获取用户VO信息
+     *
+     * @param user
+     * @return
+     */
+    @Override
+    public UserVO getUserVO(User user) {
+        if (user == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为null");
+        }
+        UserVO userVO = new UserVO();
+        BeanUtils.copyProperties(user, userVO);
+        return userVO;
+    }
+
+    /**
+     * 获取用户VO信息列表
+     *
+     * @param userList
+     * @return
+     */
+    @Override
+    public List<UserVO> getUserVOList(List<User> userList) {
+        if (CollUtil.isEmpty(userList)) {
+            return new ArrayList<>();
+        }
+        return userList.stream().map(this::getUserVO).collect(Collectors.toList());
+    }
+
+    /**
+     * 获取查询条件
+     *
+     * @param userQueryRequest 查询条件请求
+     * @return
+     */
+    @Override
+    public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
+        if (userQueryRequest == null) {
+            throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
+        }
+        Long id = userQueryRequest.getId();
+        String userAccount = userQueryRequest.getUserAccount();
+        String userName = userQueryRequest.getUserName();
+        String userProfile = userQueryRequest.getUserProfile();
+        String userRole = userQueryRequest.getUserRole();
+        String sortField = userQueryRequest.getSortField();
+        String sortOrder = userQueryRequest.getSortOrder();
+
+        QueryWrapper<User> queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq(ObjUtil.isNotNull(id), "id", id);
+        queryWrapper.eq(StrUtil.isNotBlank(userRole), "userRole", userRole);
+        queryWrapper.like(StrUtil.isNotBlank(userAccount), "userAccount", userAccount);
+        queryWrapper.like(StrUtil.isNotBlank(userName), "userName", userName);
+        queryWrapper.like(StrUtil.isNotBlank(userProfile), "userProfile", userProfile);
+        queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), "ascend".equals(sortOrder), sortField);
+        return queryWrapper;
+    }
+
 }
 
 
