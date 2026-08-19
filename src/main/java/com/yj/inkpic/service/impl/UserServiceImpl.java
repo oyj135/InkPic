@@ -1,19 +1,20 @@
 package com.yj.inkpic.service.impl;
 
 import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.spring.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.constant.JwtClaimsConstant;
-import com.yj.inkpic.constant.UserConstant;
 import com.yj.inkpic.excption.BusinessException;
-import com.yj.inkpic.model.dto.UserRegisterRequest;
+import com.yj.inkpic.model.dto.UserJwtDTO;
 import com.yj.inkpic.model.entity.User;
 import com.yj.inkpic.model.enums.UserRoleEnum;
 import com.yj.inkpic.model.vo.LoginUserVO;
 import com.yj.inkpic.properties.JwtProperties;
 import com.yj.inkpic.service.UserService;
 import com.yj.inkpic.mapper.UserMapper;
+import com.yj.inkpic.utils.BaseContext;
 import com.yj.inkpic.utils.EncryptPassword;
 import com.yj.inkpic.utils.JwtUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -108,10 +109,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
             log.info("user login failed, userAccount cannot match userPassword");
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
         }
+        UserJwtDTO userJwtDTO = new UserJwtDTO();
+        BeanUtils.copyProperties(user, userJwtDTO);
         // 3. 生成 jwt 令牌
         Map<String, Object> claims = new HashMap<>();
-        claims.put(JwtClaimsConstant.USER_ID, user.getId());
-        claims.put(JwtClaimsConstant.USER_ACCOUNT, user.getUserAccount());
+        claims.put(JwtClaimsConstant.USER, userJwtDTO);
 
         // 令牌生成
         String token = JwtUtil.createJWT(
@@ -124,6 +126,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         BeanUtils.copyProperties(user, loginUserVO);
         // 设置 token
         loginUserVO.setToken(token);
+        return loginUserVO;
+    }
+
+    /**
+     * 获取当前登录用户
+     * @return
+     */
+    @Override
+    public User getLoginUser() {
+        // 先判断是否已经登录
+        UserJwtDTO currentUser = BaseContext.getCurrentUser();
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
+        }
+        // 从数据库查询
+        Long userId = currentUser.getId();
+        User user = this.getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
+        }
+        return user;
+    }
+
+    /**
+     * 获取脱敏的已登录用户信息
+     * @param user
+     * @return
+     */
+    @Override
+    public LoginUserVO getLoginUserVO(User user) {
+        if (user == null) {
+            return null;
+        }
+        LoginUserVO loginUserVO = new LoginUserVO();
+        BeanUtils.copyProperties(user, loginUserVO);
         return loginUserVO;
     }
 }

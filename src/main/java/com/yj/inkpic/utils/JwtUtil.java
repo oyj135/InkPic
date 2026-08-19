@@ -55,12 +55,12 @@ public class JwtUtil {
         key = new SecretKeySpec(secretKey.getBytes(StandardCharsets.UTF_8), key.getAlgorithm());
 
         // 得到DefaultJwtParser
-        Claims claims = Jwts.parser()
+        // 获取 Payload (即原来的 body)
+        return Jwts.parser()
                 .verifyWith(key) // 设置验签使用的秘钥
                 .build()
                 .parseSignedClaims(token) // 解析 JWT
-                .getPayload(); // 获取 Payload (即原来的 body)
-        return claims;
+                .getPayload();
     }
 
 

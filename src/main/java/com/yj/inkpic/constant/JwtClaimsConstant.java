@@ -11,5 +11,6 @@ public interface JwtClaimsConstant {
     String USERNAME = "userName";
     String NAME = "name";
     String USER_ACCOUNT = "userAccount";
+    String USER = "user";
 
 }
