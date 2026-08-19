@@ -25,3 +25,22 @@ create table if not exists user
     UNIQUE KEY uk_userAccount (userAccount),
     INDEX idx_userName (userName)
 ) comment '用户' collate = utf8mb4_unicode_ci;
+
+-- 操作日志表
+CREATE TABLE `operate_log` (
+                               `id` bigint NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+                               `userId` bigint DEFAULT NULL COMMENT '操作人ID',
+                               `userName` varchar(50) DEFAULT NULL COMMENT '操作人账号',
+                               `module` varchar(50) DEFAULT NULL COMMENT '操作模块(如：用户管理)',
+                               `type` varchar(50) DEFAULT NULL COMMENT '操作类型(如：新增、修改、删除、查询)',
+                               `method` varchar(200) DEFAULT NULL COMMENT '请求方法(类名.方法名)',
+                               `methodParam` text DEFAULT NULL COMMENT '方法参数',
+                               `result` text DEFAULT NULL COMMENT '返回结果',
+                               `status` tinyint DEFAULT 1 COMMENT '操作状态(1成功 0失败)',
+                               `errorMsg` text DEFAULT NULL COMMENT '错误消息(操作失败时记录)',
+                               `costTime` int DEFAULT NULL COMMENT '执行耗时(毫秒)',
+                               `operateTime` datetime default CURRENT_TIMESTAMP not null COMMENT '操作时间',
+                               PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='操作日志表' collate = utf8mb4_unicode_ci;
+
+
