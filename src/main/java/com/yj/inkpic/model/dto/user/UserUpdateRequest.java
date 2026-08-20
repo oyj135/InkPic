@@ -1,6 +1,5 @@
-package com.yj.inkpic.model.dto;
+package com.yj.inkpic.model.dto.user;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;

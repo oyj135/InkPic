@@ -1,6 +1,6 @@
 package com.yj.inkpic.utils;
 
-import com.yj.inkpic.model.dto.UserJwtDTO;
+import com.yj.inkpic.model.dto.user.UserJwtDTO;
 
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>

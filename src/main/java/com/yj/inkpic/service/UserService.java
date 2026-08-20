@@ -2,9 +2,9 @@ package com.yj.inkpic.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
-import com.yj.inkpic.model.dto.UserAddRequest;
-import com.yj.inkpic.model.dto.UserQueryRequest;
-import com.yj.inkpic.model.dto.UserUpdateRequest;
+import com.yj.inkpic.model.dto.user.UserAddRequest;
+import com.yj.inkpic.model.dto.user.UserQueryRequest;
+import com.yj.inkpic.model.dto.user.UserUpdateRequest;
 import com.yj.inkpic.model.entity.User;
 import com.yj.inkpic.model.vo.LoginUserVO;
 import com.yj.inkpic.model.vo.UserVO;

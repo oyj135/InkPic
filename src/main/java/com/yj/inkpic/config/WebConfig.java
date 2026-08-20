@@ -28,6 +28,14 @@ public class WebConfig implements WebMvcConfigurer {
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(tokenInterceptor) // 添加拦截器
                 .addPathPatterns("/**") // 拦截所有请求
-                .excludePathPatterns("/user/login", "/user/register", "/user/logout", "/swagger-resources/**"); // 不拦截指定请求
+                .excludePathPatterns(
+                        "/user/login",
+                        "/user/register",
+                        "/user/logout",
+                        "/swagger-resources/**",
+                        "/v2/api-docs/**",
+                        "/doc.html",
+                        "/webjars/**",
+                        "/swagger-ui.html"); // 不拦截指定请求
     }
 }

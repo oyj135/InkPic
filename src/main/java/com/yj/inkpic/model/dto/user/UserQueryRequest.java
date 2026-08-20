@@ -1,8 +1,10 @@
-package com.yj.inkpic.model.dto;
+package com.yj.inkpic.model.dto.user;
 
+import com.yj.inkpic.common.PageRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 
@@ -10,11 +12,18 @@ import java.io.Serializable;
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>
  * @Date 2026/8/19
  * <p>
- * 新增用户请求
+ * 查询用户请求
  */
+@EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("用户新增请求")
-public class UserAddRequest implements Serializable {
+@ApiModel("用户查询请求")
+public class UserQueryRequest extends PageRequest implements Serializable {
+
+    /**
+     * 用户id
+     */
+    @ApiModelProperty("用户id")
+    private Long id;
 
     /**
      * 用户昵称
@@ -27,12 +36,6 @@ public class UserAddRequest implements Serializable {
      */
     @ApiModelProperty("账号")
     private String userAccount;
-
-    /**
-     * 用户头像
-     */
-    @ApiModelProperty("用户头像")
-    private String userAvatar;
 
     /**
      * 用户简介

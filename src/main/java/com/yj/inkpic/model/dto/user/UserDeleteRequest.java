@@ -1,4 +1,4 @@
-package com.yj.inkpic.model.dto;
+package com.yj.inkpic.model.dto.user;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

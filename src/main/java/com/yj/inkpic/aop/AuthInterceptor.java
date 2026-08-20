@@ -3,17 +3,13 @@ package com.yj.inkpic.aop;
 import com.yj.inkpic.annotation.AuthCheck;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.excption.BusinessException;
-import com.yj.inkpic.model.dto.UserJwtDTO;
-import com.yj.inkpic.model.entity.User;
+import com.yj.inkpic.model.dto.user.UserJwtDTO;
 import com.yj.inkpic.model.enums.UserRoleEnum;
-import com.yj.inkpic.service.UserService;
 import com.yj.inkpic.utils.BaseContext;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.Resource;
 
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>

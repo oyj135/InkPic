@@ -1,12 +1,8 @@
 package com.yj.inkpic.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.json.JSONUtil;
-import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.constant.JwtClaimsConstant;
-import com.yj.inkpic.excption.BusinessException;
-import com.yj.inkpic.model.dto.UserJwtDTO;
-import com.yj.inkpic.model.entity.User;
+import com.yj.inkpic.model.dto.user.UserJwtDTO;
 import com.yj.inkpic.properties.JwtProperties;
 import com.yj.inkpic.utils.BaseContext;
 import com.yj.inkpic.utils.JwtUtil;
@@ -16,7 +12,6 @@ import org.jetbrains.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
-import springfox.documentation.spring.web.json.Json;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;

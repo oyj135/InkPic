@@ -1,11 +1,9 @@
-package com.yj.inkpic.model.dto;
+package com.yj.inkpic.model.dto.user;
 
 import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 /**
  * 用户 jwt信
