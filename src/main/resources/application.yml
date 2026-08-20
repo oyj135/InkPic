@@ -35,7 +35,6 @@ mybatis-plus:
       logic-not-delete-value: 0 # 逻辑未删除值 (默认为 0)
     enable-sql-runner: true
 # 接口文档配置
-# 接口文档配置
 knife4j:
   enable: true
   openapi:
@@ -43,7 +42,7 @@ knife4j:
     version: 1.0
     group:
       default:
-        group-name: 默认分组
+        group-name: default
         api-rule: package
         api-rule-resources:
           - com.yj.inkpic.controller
@@ -56,5 +55,14 @@ ink-pic:
     user-ttl: ${ink-pic.jwt.user-ttl}
     # 设置前端传递过来的令牌名称
     user-token-name: ${ink-pic.jwt.user-token-namenk}
+# cos 对象存储配置
+cos:
+  client:
+    host: ${cos.client.host}
+    secretId: ${cos.client.secretId}
+    secretKey: ${cos.client.secretKey}
+    region: ${cos.client.region}
+    bucket: ${cos.client.bucket}
+
 
 

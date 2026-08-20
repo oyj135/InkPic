@@ -24,4 +24,6 @@ public interface LogConstant {
 
     String UPDATE_OPERATION = "更新";
 
+    String PIC_UPLOAD = "图片上传";
+
 }

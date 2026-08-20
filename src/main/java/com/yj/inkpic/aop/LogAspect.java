@@ -12,6 +12,7 @@ import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
@@ -52,11 +53,26 @@ public class LogAspect {
         try {
             Object[] args = point.getArgs();
             if (args != null && args.length > 0) {
-                operateLog.setMethodParam(JSONUtil.toJsonStr(args));
+                StringBuilder paramBuilder = new StringBuilder("[");
+                for (int i = 0; i < args.length; i++) {
+                    if (args[i] instanceof MultipartFile) {
+                        // 跳过 MultipartFile 参数
+                        paramBuilder.append("\"").append(((MultipartFile) args[i]).getOriginalFilename()).append("\"");
+                    } else {
+                        // 其他参数正常序列化
+                        paramBuilder.append(JSONUtil.toJsonStr(args[i]));
+                    }
+                    if (i < args.length - 1) {
+                        paramBuilder.append(",");
+                    }
+                }
+                paramBuilder.append("]");
+                operateLog.setMethodParam(paramBuilder.toString());
             }
         } catch (Exception e) {
             log.warn("记录请求参数异常: {}", e.getMessage());
         }
+
 
         // 执行目标方法
         Object result = null;

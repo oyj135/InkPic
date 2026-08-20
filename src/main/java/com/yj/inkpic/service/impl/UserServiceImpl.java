@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.constant.JwtClaimsConstant;
+import com.yj.inkpic.constant.UserConstant;
 import com.yj.inkpic.excption.BusinessException;
 import com.yj.inkpic.model.dto.user.UserAddRequest;
 import com.yj.inkpic.model.dto.user.UserJwtDTO;
@@ -306,6 +307,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.like(StrUtil.isNotBlank(userProfile), "userProfile", userProfile);
         queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), "ascend".equals(sortOrder), sortField);
         return queryWrapper;
+    }
+
+    @Override
+    public boolean isAdmin(User user) {
+        return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());
     }
 
 }
