@@ -4,6 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -13,7 +14,7 @@ import java.io.Serializable;
  * 用户更新请求
  */
 @Data
-@ApiModel("用户更新请求")
+@ApiModel(value = "UserUpdateRequest", description = "用户更新请求")
 public class UserUpdateRequest implements Serializable {
 
     /**
@@ -52,5 +53,6 @@ public class UserUpdateRequest implements Serializable {
     @ApiModelProperty("用户角色: user, admin")
     private String userRole;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

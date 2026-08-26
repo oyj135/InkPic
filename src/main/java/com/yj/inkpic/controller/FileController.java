@@ -6,10 +6,7 @@ import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.common.ResultUtils;
 import com.yj.inkpic.constant.UserConstant;
 import com.yj.inkpic.excption.BusinessException;
-import com.yj.inkpic.excption.ThrowUtils;
 import com.yj.inkpic.manager.CosManager;
-import com.yj.inkpic.manager.FileManager;
-import com.yj.inkpic.model.dto.file.UploadPictureResult;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -19,9 +16,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.Resource;
 import java.io.File;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
+/**
+ * 测试文件上传功能
+ * @author OuYJ
+ */
 @Slf4j
 @RestController
 @RequestMapping("/file")
@@ -30,14 +29,11 @@ public class FileController {
     @Resource
     private CosManager cosManager;
 
-    @Resource
-    private FileManager fileManager;
-
     /**
      * 测试文件上传
      *
      * @param multipartFile 上传的文件
-     * @return
+     * @return 文件访问地址
      */
     @AuthCheck(mustRole = UserConstant.ADMIN_ROLE)
     @PostMapping("/test/upload")

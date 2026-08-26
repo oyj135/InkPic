@@ -13,7 +13,7 @@ import java.io.Serializable;
  * 新增用户请求
  */
 @Data
-@ApiModel("用户新增请求")
+@ApiModel(value = "UserAddRequest", description = "用户新增请求")
 public class UserAddRequest implements Serializable {
 
     /**

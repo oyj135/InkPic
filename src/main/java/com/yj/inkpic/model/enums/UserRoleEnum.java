@@ -7,8 +7,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>
  * @Date 2026/8/14
@@ -18,6 +16,8 @@ import java.util.stream.Collectors;
 @Getter
 public enum UserRoleEnum {
 
+
+    // 用户角色枚举
     USER("用户", "user"),
     ADMIN("管理员", "admin"),
     BAN("被封号", "ban");
@@ -31,7 +31,9 @@ public enum UserRoleEnum {
         this.value = value;
     }
 
-    // 静态 Map 缓存
+    /**
+     * 静态 Map 缓存
+     */
     private static final Map<String, UserRoleEnum> VALUE_MAP = new HashMap<>();
 
     // 静态初始化
@@ -43,16 +45,14 @@ public enum UserRoleEnum {
 
     /**
      * 获取值列表
-     *
      */
     public static final List<String> GET_VALUES = Arrays.stream(values())
             .map(item -> item.value)
-            .collect(Collectors.toList());
+            .toList();
 
     /**
      * 根据 value 获取枚举值
-     * @param value
-     * @return
+     * @param value value
      */
     public static UserRoleEnum getEnumByValue(String value) {
         if (ObjUtil.isEmpty(value)) {

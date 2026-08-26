@@ -20,6 +20,8 @@ import java.util.concurrent.CompletableFuture;
 
 /**
  * 日志切面
+ *
+ * @author yj
  */
 
 @Aspect
@@ -34,7 +36,7 @@ public class LogAspect {
      * 环绕通知拦截带有 @Log 注解的方法
      */
     @Around("@annotation(logOperation)")
-    public Object around(ProceedingJoinPoint point, LogOperation logOperation) throws Throwable {
+    public Object around(ProceedingJoinPoint point, LogOperation logOperation){
 
         long startTime = System.currentTimeMillis();
         
@@ -75,16 +77,19 @@ public class LogAspect {
 
 
         // 执行目标方法
-        Object result = null;
+        Object result;
         try {
             result = point.proceed();
-            operateLog.setStatus(1); // 成功
+            // 成功
+            operateLog.setStatus(1);
             // 记录返回结果
             operateLog.setResult(JSONUtil.toJsonStr(result));
         } catch (Throwable e) {
-            operateLog.setStatus(0); // 失败
+            // 失败
+            operateLog.setStatus(0);
             operateLog.setErrorMsg(e.getMessage().length() > 2000 ? e.getMessage().substring(0, 2000) : e.getMessage());
-            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "日志操作失败"); // 异常继续抛出，交给全局异常处理器
+            // 异常继续抛出，交给全局异常处理器
+            throw new BusinessException(ErrorCode.SYSTEM_ERROR, "日志操作失败");
         } finally {
             operateLog.setCostTime((int) (System.currentTimeMillis() - startTime));
             operateLog.setOperateTime(LocalDateTime.now());

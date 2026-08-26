@@ -1,5 +1,6 @@
 package com.yj.inkpic.model.dto.file;
 
+import io.swagger.annotations.ApiModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -7,12 +8,14 @@ import lombok.NoArgsConstructor;
 
 /**
  * 图片上传结果
+ * @author OuYJ
  */
 
 @Data
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ApiModel(value = "UploadPictureResult", description = "图片上传结果")
 public class UploadPictureResult {
 
     /**

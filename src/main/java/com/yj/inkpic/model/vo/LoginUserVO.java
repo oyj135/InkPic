@@ -5,11 +5,13 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 登录用户
+ * @author OuYJ
  * @TableName user
  */
 @ApiModel("已登录用户视图（脱敏）")
@@ -46,6 +48,7 @@ public class LoginUserVO implements Serializable {
     @ApiModelProperty("jwt令牌")
     private String token;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

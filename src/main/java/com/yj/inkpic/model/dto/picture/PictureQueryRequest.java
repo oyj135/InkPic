@@ -6,15 +6,17 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /**
  * 图片查询请求
+ * @author OuYJ
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("图片查询请求")
+@ApiModel(value = "PictureQueryRequest", description = "图片查询请求")
 public class PictureQueryRequest extends PageRequest implements Serializable {
 
     /**
@@ -89,6 +91,7 @@ public class PictureQueryRequest extends PageRequest implements Serializable {
     @ApiModelProperty("用户 id")
     private Long userId;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }
 

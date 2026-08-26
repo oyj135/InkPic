@@ -3,10 +3,12 @@ package com.yj.inkpic.model.dto.user;
 import com.baomidou.mybatisplus.annotation.*;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
- * 用户 jwt信
+ * JWT 中存储的用户信息
+ * @author OuYJ
  */
 @Data
 public class UserJwtDTO implements Serializable {
@@ -30,6 +32,7 @@ public class UserJwtDTO implements Serializable {
      */
     private String userRole;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

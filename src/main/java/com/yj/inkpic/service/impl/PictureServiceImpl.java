@@ -59,9 +59,9 @@ public class PictureServiceImpl extends ServiceImpl<PictureMapper, Picture>
         if (currentUser == null) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "用户未登录");
         }
-        // 判断是新增还是删除
+        // 判断是新增还是更新
         Long picId = null;
-        if (picId != null) {
+        if (pictureUploadRequest != null ) {
             picId = pictureUploadRequest.getId();
         }
         // 如果是更新，判断当前图片是否已经存在

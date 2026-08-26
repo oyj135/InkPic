@@ -6,17 +6,17 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>
  * @Date 2026/8/19
- * <p>
  * 查询用户请求
  */
 @EqualsAndHashCode(callSuper = true)
 @Data
-@ApiModel("用户查询请求")
+@ApiModel(value = "UserQueryRequest", description = "用户查询请求")
 public class UserQueryRequest extends PageRequest implements Serializable {
 
     /**
@@ -49,6 +49,7 @@ public class UserQueryRequest extends PageRequest implements Serializable {
     @ApiModelProperty("用户角色: user, admin")
     private String userRole;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }
 

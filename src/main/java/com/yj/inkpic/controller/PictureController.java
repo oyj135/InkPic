@@ -31,7 +31,7 @@ import javax.annotation.Resource;
 
 @RestController
 @RequestMapping("/picture")
-@Api("图片模块接口")
+@Api(tags = "图片模块接口")
 public class PictureController {
 
     @Resource

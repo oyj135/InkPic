@@ -4,14 +4,16 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.util.List;
 
 /**
  * 图片编辑请求
+ * @author OuYJ
  */
 @Data
-@ApiModel("图片编辑请求")
+@ApiModel(value = "PictureEditRequest", description = "图片编辑请求")
 public class PictureEditRequest implements Serializable {
 
     /**
@@ -44,5 +46,6 @@ public class PictureEditRequest implements Serializable {
     @ApiModelProperty("图片标签")
     private List<String> tags;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 }

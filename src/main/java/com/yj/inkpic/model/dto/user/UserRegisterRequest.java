@@ -11,7 +11,7 @@ import lombok.Data;
  * 用户注册请求
  */
 @Data
-@ApiModel("用户注册请求")
+@ApiModel(value = "UserRegisterRequest", description = "用户注册请求")
 public class UserRegisterRequest {
 
     @ApiModelProperty("用户账号")

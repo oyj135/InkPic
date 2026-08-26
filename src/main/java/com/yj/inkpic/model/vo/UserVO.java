@@ -5,12 +5,14 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
  * 用户
  *
+ * @author OuYJ
  * @TableName user
  */
 @ApiModel("用户视图（脱敏）")
@@ -38,6 +40,7 @@ public class UserVO implements Serializable {
     @ApiModelProperty("创建时间")
     private LocalDateTime createTime;
 
+    @Serial
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }

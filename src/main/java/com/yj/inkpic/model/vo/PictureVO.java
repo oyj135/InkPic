@@ -7,13 +7,14 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.beans.BeanUtils;
 
+import java.io.Serial;
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
 /**
  * 图片封装类
+ * @author OuYJ
  */
 @Data
 @ApiModel("图片封装类")
@@ -115,6 +116,7 @@ public class PictureVO implements Serializable {
     @ApiModelProperty("创建用户信息")
     private UserVO user;
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     /**

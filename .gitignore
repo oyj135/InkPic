@@ -1,9 +1,11 @@
-HELP.md
 application-dev.yml
 target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# 忽略所有 test 目录
+**/test/
 
 ### STS ###
 .apt_generated
