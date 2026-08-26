@@ -1,5 +1,7 @@
 package com.yj.inkpic.service.impl;
 
+import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.StrUtil;
@@ -7,6 +9,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.yj.inkpic.common.ErrorCode;
 import com.yj.inkpic.constant.JwtClaimsConstant;
+import com.yj.inkpic.constant.RedisConstant;
 import com.yj.inkpic.constant.UserConstant;
 import com.yj.inkpic.excption.BusinessException;
 import com.yj.inkpic.model.dto.user.UserAddRequest;
@@ -23,8 +26,11 @@ import com.yj.inkpic.mapper.UserMapper;
 import com.yj.inkpic.utils.BaseContext;
 import com.yj.inkpic.utils.EncryptPassword;
 import com.yj.inkpic.utils.JwtUtil;
+import com.yj.inkpic.utils.LoginRateLimiter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -33,6 +39,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.yj.inkpic.constant.UserConstant.DEFAULT_PASSWORD;
@@ -49,6 +56,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     @Resource
     private JwtProperties jwtProperties;
+
+    @Resource
+    private LoginRateLimiter loginRateLimiter;
+
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
 
     /**
      * 用户注册
@@ -110,29 +123,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (StrUtil.hasBlank(userAccount, userPassword)) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "参数为空");
         }
-        // 2.检查账号密码是否正确
+        // todo 后期可实现验证码校验
+        // 2.检查账号是否存在
         QueryWrapper<User> qw = new QueryWrapper<>();
-        // select * from user where userAccount = ? and userPassword = ?
         qw.eq("userAccount", userAccount);
-        qw.eq("userPassword", EncryptPassword.getEncryptPassword(userPassword));
         User user = this.baseMapper.selectOne(qw);
         if (user == null) {
-            log.info("user login failed, userAccount cannot match userPassword");
-            throw new BusinessException(ErrorCode.PARAMS_ERROR, "用户不存在或密码错误");
+            log.info("user login failed, userAccount not exist");
+            loginFailed(userAccount);
         }
-        UserJwtDTO userJwtDTO = new UserJwtDTO();
-        BeanUtils.copyProperties(user, userJwtDTO);
-        // 3. 生成 jwt 令牌
+        // 3.校验密码（BCrypt 每次哈希不同，需用 matches 比对）
+        if (!EncryptPassword.matches(userPassword, user.getUserPassword())) {
+            log.info("user login failed, password not match");
+            loginFailed(userAccount);
+        }
+        UserJwtDTO userJwtDTO = BeanUtil.copyProperties(user, UserJwtDTO.class);
+        Map<String, Object> userMap = BeanUtil.beanToMap(userJwtDTO, new HashMap<>(),
+                CopyOptions.create()
+                        .setIgnoreNullValue(true)
+                        .setFieldValueEditor((filedName,filedValue) -> filedValue.toString()));
+        // 3. 生成 jwt 令牌（作为不可猜测的凭证，payload 只放 userId，用户信息以 Redis 为准）
         Map<String, Object> claims = new HashMap<>();
-        claims.put(JwtClaimsConstant.USER, userJwtDTO);
+        claims.put(JwtClaimsConstant.USER_ID, user.getId());
 
         // 令牌生成
         String token = JwtUtil.createJWT(
-                jwtProperties.getUserSecretKey(), // 设置jwt签名加密时使用的秘钥
-                jwtProperties.getUserTtl(), // 设置jwt过期时间
-                claims // 设置jwt中保存的用户信息
+                jwtProperties.getUserSecretKey(),
+                jwtProperties.getUserTtl(),
+                claims
         );
-        // 4. 返回脱敏信息
+        // 4. 将 token 存入 Redis
+        String tokenKey = RedisConstant.LOGIN_TOKEN_KEY + token;
+        stringRedisTemplate.opsForHash().putAll(tokenKey, userMap);
+        stringRedisTemplate.expire(tokenKey, jwtProperties.getUserTtl(), TimeUnit.MILLISECONDS);
+        // 5. 返回脱敏信息
         LoginUserVO loginUserVO = new LoginUserVO();
         BeanUtils.copyProperties(user, loginUserVO);
         // 设置 token
@@ -141,8 +165,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     }
 
     /**
+     * 登录失败处理
+     * @param userAccount 用户账号
+     */
+    private void loginFailed(String userAccount) {
+        loginRateLimiter.recordAttempt(userAccount);
+        LoginRateLimiter.RateLimitResult result = loginRateLimiter.checkBlock(userAccount);
+        throw new BusinessException(ErrorCode.PARAMS_ERROR, buildLoginFailMsg(result));
+    }
+
+    /**
+     * 构建登录失败提示信息
+     * @param result 登录限制结果
+     * @return 提示信息
+     */
+    private String buildLoginFailMsg(LoginRateLimiter.RateLimitResult result) {
+        long remaining = result.remainingAttempts();
+        if (remaining > 0) {
+            return "用户不存在或密码错误, 还剩 " + remaining + " 次机会";
+        }
+        long ttlMin = Math.max(1, (result.ttlSeconds() + 59) / 60);
+        return "登录失败次数过多，账号已锁定，请 " + ttlMin + " 分钟后再试";
+    }
+
+    /**
      * 获取当前登录用户
-     * @return
+     * @return 当前登录用户信息
      */
     @Override
     public User getLoginUser() {
@@ -162,8 +210,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
 
     /**
      * 获取脱敏的已登录用户信息
-     * @param user
-     * @return
+     * @param user 用户信息
+     * @return 脱敏的用户信息
      */
     @Override
     public LoginUserVO getLoginUserVO(User user) {
@@ -178,16 +226,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 用户注销
      *
-     * @return
+     * @param request 请求（用于获取 token）
+     * @return true 注销成功，false 注销失败
      */
     @Override
-    public boolean userLogout() {
-        // 1.判断是否已经登录
-        UserJwtDTO currentUser = BaseContext.getCurrentUser();
-        if (currentUser == null) {
+    public boolean userLogout(HttpServletRequest request) {
+        // 1.获取请求头的 token
+        String token = request.getHeader("token");
+        if (StrUtil.isBlank(token)) {
             throw new BusinessException(ErrorCode.NOT_LOGIN_ERROR, "未登录");
         }
-        // 2.注销
+        // 2.删除 Redis 中的 token，使其立即失效
+        stringRedisTemplate.delete(RedisConstant.LOGIN_TOKEN_KEY + token);
+        // 3.清理 ThreadLocal
         BaseContext.removeCurrentUser();
         return true;
     }
@@ -195,8 +246,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 新增用户
      *
-     * @param userAddRequest
-     * @return
+     * @param userAddRequest 用户新增请求
+     * @return 用户id
      */
     @Override
     public Long addUser(UserAddRequest userAddRequest) {
@@ -231,8 +282,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 更新用户信息
      *
-     * @param userUpdateRequest
-     * @return
+     * @param userUpdateRequest 用户更新请求
+     * @return 更新结果
      */
     @Override
     public Boolean updateUser(UserUpdateRequest userUpdateRequest) {
@@ -240,9 +291,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         if (userUpdateRequest == null) {
             throw new BusinessException(ErrorCode.PARAMS_ERROR, "请求参数为空");
         }
-        // 2. 更新数据库
+        // 2. 获取当前登录用户，校验操作权限
+        User loginUser = getLoginUser();
+        boolean isAdmin = isAdmin(loginUser);
+
+        Long targetId = userUpdateRequest.getId();
+        // 普通用户只能修改自己的资料；管理员可修改任意用户
+        if (targetId != null && !loginUser.getId().equals(targetId) && !isAdmin) {
+            throw new BusinessException(ErrorCode.NO_AUTH_ERROR, "无权修改其他用户信息");
+        }
+        // 若未指定 id，默认修改当前登录用户
+        if (targetId == null) {
+            userUpdateRequest.setId(loginUser.getId());
+        }
+
+        // 3. 构建更新对象，禁止普通用户修改角色（防提权）
         User user = new User();
         BeanUtils.copyProperties(userUpdateRequest, user);
+        if (!isAdmin) {
+            user.setUserRole(UserConstant.DEFAULT_ROLE);
+        }
         boolean update = this.updateById(user);
         if (!update) {
             throw new BusinessException(ErrorCode.SYSTEM_ERROR, "更新用户失败");
@@ -253,8 +321,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 获取用户VO信息
      *
-     * @param user
-     * @return
+     * @param user 用户信息
+     * @return 脱敏的用户信息
      */
     @Override
     public UserVO getUserVO(User user) {
@@ -269,8 +337,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
     /**
      * 获取用户VO信息列表
      *
-     * @param userList
-     * @return
+     * @param userList 用户信息列表
+     * @return 脱敏的用户信息列表
      */
     @Override
     public List<UserVO> getUserVOList(List<User> userList) {
@@ -280,11 +348,22 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         return userList.stream().map(this::getUserVO).collect(Collectors.toList());
     }
 
+
+    /**
+     * 允许排序的字段白名单
+     */
+    private static final Map<String, String> SORT_FIELD_WHITELIST = new HashMap<>() {{
+        put("id", "id");
+        put("createTime", "createTime");
+        put("updateTime", "updateTime");
+        put("userRole", "userRole");
+    }};
+
     /**
      * 获取查询条件
      *
      * @param userQueryRequest 查询条件请求
-     * @return
+     * @return 查询条件
      */
     @Override
     public QueryWrapper<User> getQueryWrapper(UserQueryRequest userQueryRequest) {
@@ -305,10 +384,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User>
         queryWrapper.like(StrUtil.isNotBlank(userAccount), "userAccount", userAccount);
         queryWrapper.like(StrUtil.isNotBlank(userName), "userName", userName);
         queryWrapper.like(StrUtil.isNotBlank(userProfile), "userProfile", userProfile);
-        queryWrapper.orderBy(StrUtil.isNotEmpty(sortField), "ascend".equals(sortOrder), sortField);
+        // 排序字段必须在白名单内，否则忽略，杜绝 SQL 注入
+        String safeSortColumn = SORT_FIELD_WHITELIST.get(sortField);
+        if (StrUtil.isNotEmpty(safeSortColumn)) {
+            queryWrapper.orderBy(true, "ascend".equals(sortOrder), safeSortColumn);
+        }
         return queryWrapper;
     }
 
+    /**
+     *  判断用户是否为管理员
+     * @param user 当前登录的 user
+     * @return true 是管理员，false 不是管理员
+     */
     @Override
     public boolean isAdmin(User user) {
         return user != null && UserRoleEnum.ADMIN.getValue().equals(user.getUserRole());

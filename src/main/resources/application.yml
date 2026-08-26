@@ -2,10 +2,6 @@ server:
   port: 8123
   servlet:
     context-path: /api
-    # cookie 30 天过期
-    session:
-      cookie:
-        max-age: 2592000
 spring:
   profiles:
     active: dev
@@ -13,10 +9,22 @@ spring:
     name: InkPic
     # 数据库配置
   datasource:
-      driver-class-name: ${InkPic.datasource.driver-class-name}
-      url: jdbc:mysql://${InkPic.datasource.host}:${InkPic.datasource.port}/${InkPic.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
-      username: ${InkPic.datasource.username}
-      password: ${InkPic.datasource.password}
+    driver-class-name: ${InkPic.datasource.driver-class-name}
+    url: jdbc:mysql://${InkPic.datasource.host}:${InkPic.datasource.port}/${InkPic.datasource.database}?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+    username: ${InkPic.datasource.username}
+    password: ${InkPic.datasource.password}
+    # redis
+  redis:
+    host: ${InkPic.redis.host}
+    port: ${InkPic.redis.port}
+    password: ${InkPic.redis.password}
+    database: ${InkPic.redis.database}
+    lettuce:
+      pool:
+        max-active: 8
+        max-wait: 1000ms
+        max-idle: 8
+        min-idle: 0
   # 开放更大的文件上传体积
   servlet:
     multipart:

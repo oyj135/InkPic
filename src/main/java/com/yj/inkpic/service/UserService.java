@@ -53,9 +53,10 @@ public interface UserService extends IService<User> {
     /**
      * 用户注销
      *
+     * @param request 请求（用于获取 token）
      * @return 注销是否成功
      */
-    boolean userLogout();
+    boolean userLogout(HttpServletRequest request);
 
     /**
      * 添加用户

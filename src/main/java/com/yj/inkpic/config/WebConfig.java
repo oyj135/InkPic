@@ -22,20 +22,24 @@ public class WebConfig implements WebMvcConfigurer {
 
     /**
      * 注册 拦截器
-     * @param registry
+     * @param registry 拦截器注册器
      */
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(tokenInterceptor) // 添加拦截器
-                .addPathPatterns("/**") // 拦截所有请求
+        // 注册拦截器
+        registry.addInterceptor(tokenInterceptor)
+                // 拦截路径
+                .addPathPatterns("/**")
+                // 排除路径
                 .excludePathPatterns(
                         "/user/login",
+                        "/user/code",
                         "/user/register",
                         "/user/logout",
                         "/swagger-resources/**",
                         "/v2/api-docs/**",
                         "/doc.html",
                         "/webjars/**",
-                        "/swagger-ui.html"); // 不拦截指定请求
+                        "/swagger-ui.html");
     }
 }

@@ -1,14 +1,15 @@
 package com.yj.inkpic.interceptor;
 
 import cn.hutool.core.bean.BeanUtil;
-import com.yj.inkpic.constant.JwtClaimsConstant;
+import com.yj.inkpic.constant.RedisConstant;
 import com.yj.inkpic.model.dto.user.UserJwtDTO;
 import com.yj.inkpic.properties.JwtProperties;
 import com.yj.inkpic.utils.BaseContext;
-import com.yj.inkpic.utils.JwtUtil;
-import io.jsonwebtoken.Claims;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -16,6 +17,8 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author <a href="https://www.ouyangjian.com/">YJ.渔夫.星辰</a>
@@ -31,6 +34,9 @@ public class TokenInterceptor implements HandlerInterceptor {
     @Resource
     private JwtProperties jwtProperties;
 
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+
     /**
      * 在请求处理之前进行调用（Controller方法调用之前）
      * @param request
@@ -40,7 +46,7 @@ public class TokenInterceptor implements HandlerInterceptor {
      * @throws Exception
      */
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, @NotNull HttpServletResponse response, @NotNull Object handler) throws Exception {
 
         // 1.获取请求头的token
         String token = request.getHeader("token");
@@ -51,23 +57,23 @@ public class TokenInterceptor implements HandlerInterceptor {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
-        // 3.如果 token 存在，效验令牌
-        try {
-            Claims claims = JwtUtil.parseJWT(jwtProperties.getUserSecretKey(), token);
-
-            // 获取当前登录用户信息
-            Object object = claims.get(JwtClaimsConstant.USER);
-            UserJwtDTO userJwtDTO = BeanUtil.toBean(object, UserJwtDTO.class);
-            // 将当前登录用户信息存入 ThreadLocal
-            BaseContext.setCurrentUser(userJwtDTO);
-            log.info("当前登录用户：{}", userJwtDTO);
-        } catch (Exception e) {
-            log.info("token效验失败, 响应 401 {}", e.getMessage());
+        // 3. 从 Redis 中查询 token
+        String key = RedisConstant.LOGIN_TOKEN_KEY + token;
+        Map<Object, Object> userMap = stringRedisTemplate.opsForHash().entries(key);
+        if (userMap.isEmpty()) {
+            log.info("用户不存在");
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return false;
         }
+        // 4. token 有效，滑动续期（与登录 TTL 一致）
+        stringRedisTemplate.expire(key, jwtProperties.getUserTtl(), TimeUnit.MILLISECONDS);
 
-        // 4.如果 token 有效，则放行
+        // 5. 获取 Redis 中缓存的用户信息，存入 ThreadLocal
+        UserJwtDTO userJwtDTO = BeanUtil.fillBeanWithMap(userMap, new UserJwtDTO(), false);
+        BaseContext.setCurrentUser(userJwtDTO);
+        log.info("当前登录用户：{}", userJwtDTO);
+
+        // 6.放行
         log.info("token效验成功, 放行");
         return true;
 

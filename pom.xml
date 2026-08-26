@@ -83,12 +83,12 @@
             <artifactId>jjwt</artifactId>
             <version>0.12.6</version>
         </dependency>
-        <!--        jedis-java客户端-->
+        <!--        spring data redis-->
         <dependency>
-            <groupId>redis.clients</groupId>
-            <artifactId>jedis</artifactId>
-            <version>4.0.0</version>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
         </dependency>
+
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-websocket</artifactId>
